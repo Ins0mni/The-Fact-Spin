@@ -1,0 +1,120 @@
+{
+  "entities": {
+    "HighScore": {
+      "title": "HighScore",
+      "description": "Leaderboard entry for a player session",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 30,
+          "description": "Participant display name or arcade initials"
+        },
+        "score": {
+          "type": "number",
+          "description": "Total score achieved in game session"
+        },
+        "correctCount": {
+          "type": "number",
+          "description": "Number of questions answered correctly"
+        },
+        "totalRounds": {
+          "type": "number",
+          "description": "Total rounds in the game"
+        },
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "description": "Firebase Auth UID of the player"
+        },
+        "userEmail": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Email address of the participant if available"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp of completion"
+        }
+      },
+      "required": ["name", "score", "correctCount", "totalRounds", "userId", "createdAt"]
+    },
+    "BoothStats": {
+      "title": "BoothStats",
+      "description": "Aggregate telemetry counters for the DYAP event booth",
+      "type": "object",
+      "properties": {
+        "sessionsToday": {
+          "type": "number",
+          "description": "Number of sessions played today"
+        },
+        "totalQuestionsAnswered": {
+          "type": "number",
+          "description": "Total question answers submitted"
+        },
+        "totalCorrect": {
+          "type": "number",
+          "description": "Total correct answers submitted"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp of last update"
+        }
+      },
+      "required": ["sessionsToday", "totalQuestionsAnswered", "totalCorrect", "updatedAt"]
+    },
+    "GameSession": {
+      "title": "GameSession",
+      "description": "Detailed log of an individual round session",
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "type": "string",
+          "maxLength": 128,
+          "description": "Unique session identifier"
+        },
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "description": "Firebase Auth UID"
+        },
+        "playerName": {
+          "type": "string",
+          "maxLength": 30,
+          "description": "Participant display name"
+        },
+        "score": {
+          "type": "number",
+          "description": "Final score"
+        },
+        "correctCount": {
+          "type": "number",
+          "description": "Number of correct answers"
+        },
+        "totalRounds": {
+          "type": "number",
+          "description": "Total rounds"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp"
+        }
+      },
+      "required": ["sessionId", "userId", "playerName", "score", "correctCount", "totalRounds", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/highScores/{scoreId}": {
+      "schema": "HighScore",
+      "description": "Global leaderboard entries for players"
+    },
+    "/boothStats/{statsDocId}": {
+      "schema": "BoothStats",
+      "description": "Booth telemetry aggregate stats"
+    },
+    "/gameSessions/{sessionId}": {
+      "schema": "GameSession",
+      "description": "Individual game session telemetry records"
+    }
+  }
+}

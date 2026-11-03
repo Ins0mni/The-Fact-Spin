@@ -1,0 +1,6 @@
+{
+  "name": "THE FACT SPIN — DYAP Youth Misinformation Game",
+  "description": "SPIN IT. QUESTION IT. VERIFY IT. An educational misinformation-awareness game designed for teenagers and youth by the Digital Youth Ambassador Programme.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

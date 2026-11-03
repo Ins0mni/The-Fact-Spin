@@ -1,0 +1,97 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isValidId(id) { 
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+    
+    function incoming() { 
+      return request.resource.data; 
+    }
+    
+    function existing() { 
+      return resource.data; 
+    }
+    
+    function isSignedIn() { 
+      return request.auth != null; 
+    }
+    
+    function isAdmin() { 
+      return isSignedIn() && (
+        request.auth.token.email == 'yusuftaiko255@gmail.com' && 
+        request.auth.token.email_verified == true
+      ); 
+    }
+
+    function isValidHighScore(data) {
+      return data.keys().hasAll(['name', 'score', 'correctCount', 'totalRounds', 'userId', 'createdAt']) &&
+        data.keys().hasOnly(['name', 'score', 'correctCount', 'totalRounds', 'userId', 'userEmail', 'createdAt']) &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 30 &&
+        data.score is number && data.score >= 0 && data.score <= 100000 &&
+        data.correctCount is number && data.correctCount >= 0 && data.correctCount <= 100 &&
+        data.totalRounds is number && data.totalRounds >= 1 && data.totalRounds <= 100 &&
+        data.userId is string && data.userId.size() <= 128 && data.userId == request.auth.uid &&
+        (!('userEmail' in data) || (data.userEmail is string && data.userEmail.size() <= 100)) &&
+        data.createdAt is string && data.createdAt.size() <= 50;
+    }
+
+    function isValidBoothStats(data) {
+      return data.keys().hasAll(['sessionsToday', 'totalQuestionsAnswered', 'totalCorrect', 'updatedAt']) &&
+        data.keys().hasOnly(['sessionsToday', 'totalQuestionsAnswered', 'totalCorrect', 'updatedAt']) &&
+        data.sessionsToday is number && data.sessionsToday >= 0 &&
+        data.totalQuestionsAnswered is number && data.totalQuestionsAnswered >= 0 &&
+        data.totalCorrect is number && data.totalCorrect >= 0 &&
+        data.updatedAt is string && data.updatedAt.size() <= 50;
+    }
+
+    function isValidGameSession(data) {
+      return data.keys().hasAll(['sessionId', 'userId', 'playerName', 'score', 'correctCount', 'totalRounds', 'createdAt']) &&
+        data.keys().hasOnly(['sessionId', 'userId', 'playerName', 'score', 'correctCount', 'totalRounds', 'createdAt']) &&
+        data.sessionId is string && data.sessionId.size() <= 128 &&
+        data.userId is string && data.userId.size() <= 128 && data.userId == request.auth.uid &&
+        data.playerName is string && data.playerName.size() >= 1 && data.playerName.size() <= 30 &&
+        data.score is number && data.score >= 0 && data.score <= 100000 &&
+        data.correctCount is number && data.correctCount >= 0 && data.correctCount <= 100 &&
+        data.totalRounds is number && data.totalRounds >= 1 && data.totalRounds <= 100 &&
+        data.createdAt is string && data.createdAt.size() <= 50;
+    }
+
+    // Connectivity verification probe
+    match /test/{docId} {
+      allow read: if true;
+    }
+
+    // High Scores Collection (Leaderboard)
+    match /highScores/{scoreId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && isValidId(scoreId) && isValidHighScore(incoming());
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+
+    // Booth Aggregate Telemetry
+    match /boothStats/{statsDocId} {
+      allow get: if true;
+      allow list: if false;
+      allow create, update: if isSignedIn() && isValidId(statsDocId) && isValidBoothStats(incoming());
+      allow delete: if isAdmin();
+    }
+
+    // Player Game Sessions
+    match /gameSessions/{sessionId} {
+      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(sessionId) && isValidGameSession(incoming());
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
